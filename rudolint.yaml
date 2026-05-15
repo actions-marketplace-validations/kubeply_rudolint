@@ -1,0 +1,5 @@
+ignore: []
+severity: {}
+trusted-registries:
+  - docker.io
+  - ghcr.io
