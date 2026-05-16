@@ -38,7 +38,7 @@ pub struct CheckArgs {
     #[arg(long, value_enum, default_value_t = Profile::Default)]
     pub profile: Profile,
 
-    /// Optional rudolint.yaml config path.
+    /// Optional .rudolint.yaml config path.
     #[arg(long)]
     pub config: Option<PathBuf>,
 

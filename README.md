@@ -31,7 +31,7 @@ This repository is a baseline implementation. It already has:
 - human, JSON, and SARIF output
 - a rule engine with default and compatibility profiles
 - initial Dockerfile rules and BuildKit-specific rules
-- ignored rules and severity overrides through `rudolint.yaml`
+- ignored rules and severity overrides through `.rudolint.yaml`
 - ignored parity-test scaffolding for comparing behavior against an external
   pinned oracle
 
@@ -41,6 +41,14 @@ BuildKit-native rules that older linters cannot model cleanly.
 
 See [docs/rule-roadmap.md](docs/rule-roadmap.md) for the compatibility and
 BuildKit rule roadmap.
+
+See [docs/implementation-plan.md](docs/implementation-plan.md) for the ordered
+implementation plan from test harness work through release packaging and a
+future GitHub Action.
+
+See [docs/rules/README.md](docs/rules/README.md) for the rule documentation
+template and [docs/performance.md](docs/performance.md) for initial advisory
+performance budgets.
 
 ## Install
 
@@ -65,7 +73,7 @@ rudolint check --format json < Dockerfile
 
 ## Configuration
 
-`rudolint.yaml`:
+`.rudolint.yaml`:
 
 ```yaml
 ignore:
@@ -83,7 +91,7 @@ trusted-registries:
 Run with:
 
 ```bash
-rudolint check . --config rudolint.yaml
+rudolint check . --config .rudolint.yaml
 ```
 
 ## Rule Families

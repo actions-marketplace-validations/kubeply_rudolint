@@ -21,6 +21,8 @@ small and boring so each part can be tested independently.
 - `rudolint-settings`: resolved settings after config and CLI overrides.
 - `rudolint-shell`: shell parsing and `RUN` command analysis.
 - `rudolint-source`: source text, spans, comments, and edit ranges.
+- `rudolint-test`: shared test-only fixture, snapshot, normalization, and CLI
+  helpers.
 
 ## Parser
 
@@ -64,3 +66,9 @@ Compatibility rules live under `RDL` and `RSC`. BuildKit-native rules live under
 
 `rudolint-output` converts diagnostics into human text, JSON, SARIF, and future
 editor/LSP responses. Renderers must not change rule behavior.
+
+## Tests
+
+`rudolint-test` owns shared test helpers. It is a dev-only crate for fixture
+paths, snapshot normalization, CLI invocation helpers, oracle normalization,
+and fix-preview rendering. Production crates must not depend on it.

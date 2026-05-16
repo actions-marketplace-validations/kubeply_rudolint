@@ -2,8 +2,9 @@
 
 This roadmap tracks the rule families `rudolint` intends to cover.
 
-Compatibility IDs are tracked by behavior and fixtures. Descriptions in this
-file are intentionally short and project-local.
+`RDL` compatibility IDs track Hadolint-derived behavior by fixtures and rule
+documentation. Descriptions in this file are intentionally short and
+project-local.
 
 ## Implemented Compatibility Rules
 

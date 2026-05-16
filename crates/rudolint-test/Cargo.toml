@@ -1,0 +1,10 @@
+[package]
+name = "rudolint-test"
+version.workspace = true
+edition.workspace = true
+description = "Shared test helpers for rudolint"
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]

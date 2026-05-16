@@ -13,3 +13,4 @@ rudolint-rules
 rudolint-settings
 rudolint-shell
 rudolint-source
+rudolint-test

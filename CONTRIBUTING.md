@@ -8,8 +8,9 @@ documentation fixes are welcome.
 
 ## Setup
 
-Install Rust through `rustup`. The repository pins its toolchain in
-`rust-toolchain.toml`, including `clippy` and `rustfmt`.
+Install Rust through `rustup`. Until `1.0.0`, `rust-toolchain.toml` is the
+exact project toolchain, not a minimum supported Rust version. It includes
+`clippy` and `rustfmt`.
 
 ```bash
 rustup show
@@ -31,6 +32,14 @@ cargo fmt --all -- --check
 cargo check --all-targets --all-features --locked
 cargo clippy --all-targets --all-features --locked -- -D warnings
 cargo test --all-targets --all-features --locked
+cargo deny check
+```
+
+Once snapshots are added, CI and local validation should run them with updates
+disabled:
+
+```bash
+INSTA_UPDATE=never cargo test --all-targets --all-features --locked
 ```
 
 During iteration, prefer targeted tests:
@@ -45,8 +54,8 @@ cargo test -p rudolint --test cli
 - Add tests for behavior changes.
 - Prefer integration tests for CLI and rule output.
 - Prefer `insta` snapshots for structured JSON and SARIF diagnostics.
-- Keep external oracle tests ignored unless the required binary is pinned and
-  explicitly installed.
+- Keep external oracle tests ignored unless the required binary is explicitly
+  installed through the oracle update workflow.
 
 ## Rules
 
@@ -54,8 +63,14 @@ Rules should be deterministic and should not perform network access. Avoid
 filesystem access inside rule implementations unless the CLI explicitly enables
 repository-wide analysis for that mode.
 
-Compatibility-oriented rules use `RDL` or `RSC` families. BuildKit-native rules
-use `RDK`.
+`RDL` rules document Hadolint compatibility provenance. `RSC` rules document
+shell-analysis behavior. BuildKit-native rules use `RDK`.
+
+Every rule must declare one of:
+
+- tested safe automatic fix.
+- tested manual suggestion.
+- tested no-fix rationale when a correct edit cannot be inferred.
 
 ## Dependencies
 

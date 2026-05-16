@@ -21,6 +21,7 @@ output rendering, and CLI orchestration can evolve independently.
 - `rudolint-settings` resolves effective settings from config and CLI inputs.
 - `rudolint-shell` owns shell parsing and `RUN` command analysis.
 - `rudolint-source` owns source text, spans, comments, and edit ranges.
+- `rudolint-test` owns shared test-only fixture, snapshot, and CLI helpers.
 
 ## Dependency Direction
 
@@ -46,8 +47,13 @@ rudolint-output
 
 rudolint-fix
   -> rudolint-source
+
+test crates and integration tests
+  -> rudolint-test
 ```
 
 Keep `rudolint-source`, `rudolint-diagnostics`, and `rudolint-dockerfile`
 dependency-light. Rules may depend on semantic helper crates, but parser,
 diagnostics, and source-span crates must not depend on rule or output crates.
+`rudolint-test` is dev-only and must not be used by production crate
+dependencies.
