@@ -45,7 +45,7 @@ BuildKit rule roadmap.
 ## Install
 
 ```bash
-cargo install --path .
+cargo install --path crates/rudolint-cli
 ```
 
 ## Usage
@@ -138,10 +138,29 @@ fixtures and documented hardware/OS metadata.
 
 ## Development
 
+The Rust code is organized as a Cargo workspace under `crates/`:
+
+- `rudolint`: binary crate and CLI orchestration
+- `rudolint-bench`: benchmark harness support and corpus metadata
+- `rudolint-buildkit`: BuildKit and Buildx semantic analysis
+- `rudolint-config`: config loading and config-domain types
+- `rudolint-diagnostics`: severities and diagnostic records
+- `rudolint-dockerfile`: Dockerfile parser and syntax model
+- `rudolint-fix`: autofix edit planning
+- `rudolint-image`: container image reference parsing
+- `rudolint-lsp`: future language server integration
+- `rudolint-output`: human, JSON, and SARIF renderers
+- `rudolint-policy`: rule selection and compatibility profiles
+- `rudolint-rules`: rule catalog and rule engine
+- `rudolint-settings`: resolved settings
+- `rudolint-shell`: shell and `RUN` command analysis
+- `rudolint-source`: source text and spans
+
 ```bash
-cargo fmt
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
+cargo fmt --all -- --check
+cargo check --all-targets --all-features --locked
+cargo clippy --all-targets --all-features --locked -- -D warnings
+cargo test --all-targets --all-features --locked
 ```
 
 Run ignored oracle tests only when the pinned oracle binary is installed:

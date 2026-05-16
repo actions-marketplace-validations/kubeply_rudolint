@@ -1,0 +1,9 @@
+[package]
+name = "rudolint-shell"
+version.workspace = true
+edition.workspace = true
+description = "Shell command analysis for Dockerfile RUN instructions"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

@@ -1,0 +1,10 @@
+[package]
+name = "rudolint-dockerfile"
+version.workspace = true
+edition.workspace = true
+description = "Dockerfile parsing for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+regex.workspace = true

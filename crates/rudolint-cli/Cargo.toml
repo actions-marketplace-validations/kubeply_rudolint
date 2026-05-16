@@ -1,0 +1,21 @@
+[package]
+name = "rudolint"
+version.workspace = true
+edition.workspace = true
+description = "BuildKit-native Dockerfile linter"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+ignore.workspace = true
+rudolint-config.workspace = true
+rudolint-diagnostics.workspace = true
+rudolint-dockerfile.workspace = true
+rudolint-output.workspace = true
+rudolint-rules.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true

@@ -1,0 +1,10 @@
+[package]
+name = "rudolint-fix"
+version.workspace = true
+edition.workspace = true
+description = "Autofix patch generation for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+rudolint-source.workspace = true

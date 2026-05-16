@@ -1,0 +1,12 @@
+[package]
+name = "rudolint-output"
+version.workspace = true
+edition.workspace = true
+description = "Output renderers for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+rudolint-diagnostics.workspace = true
+serde_json.workspace = true

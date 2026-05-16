@@ -1,0 +1,9 @@
+[package]
+name = "rudolint-source"
+version.workspace = true
+edition.workspace = true
+description = "Source text, spans, and edit ranges for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

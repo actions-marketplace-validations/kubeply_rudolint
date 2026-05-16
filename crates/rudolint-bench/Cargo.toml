@@ -1,0 +1,9 @@
+[package]
+name = "rudolint-bench"
+version.workspace = true
+edition.workspace = true
+description = "Benchmark harness support for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

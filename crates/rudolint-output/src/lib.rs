@@ -1,7 +1,6 @@
 use anyhow::Result;
+use rudolint_diagnostics::Finding;
 use serde_json::json;
-
-use crate::diagnostic::Finding;
 
 pub fn human(findings: &[Finding]) -> String {
     if findings.is_empty() {

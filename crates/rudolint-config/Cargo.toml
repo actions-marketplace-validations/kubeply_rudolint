@@ -1,0 +1,13 @@
+[package]
+name = "rudolint-config"
+version.workspace = true
+edition.workspace = true
+description = "Configuration loading for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+rudolint-diagnostics.workspace = true
+serde.workspace = true
+serde_yaml.workspace = true

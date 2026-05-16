@@ -1,0 +1,9 @@
+[package]
+name = "rudolint-image"
+version.workspace = true
+edition.workspace = true
+description = "Container image reference parsing for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

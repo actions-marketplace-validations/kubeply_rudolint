@@ -1,10 +1,31 @@
 # Architecture
 
-`rudolint` is split into four layers.
+`rudolint` is split into focused crates. The crate boundaries should stay
+small and boring so each part can be tested independently.
+
+## Workspace Crates
+
+- `rudolint`: binary crate and CLI orchestration.
+- `rudolint-bench`: benchmark harness support and corpus metadata.
+- `rudolint-buildkit`: BuildKit frontend, mount, entitlement, and Buildx
+  semantics.
+- `rudolint-config`: configuration loading and config-domain types.
+- `rudolint-diagnostics`: diagnostic records, severities, and source paths.
+- `rudolint-dockerfile`: Dockerfile parser and syntax model.
+- `rudolint-fix`: autofix edit generation and patch planning.
+- `rudolint-image`: container image reference parsing.
+- `rudolint-lsp`: language server integration points.
+- `rudolint-output`: human, JSON, and SARIF renderers.
+- `rudolint-policy`: rule selection, profiles, and compatibility policy.
+- `rudolint-rules`: rule catalog and rule engine.
+- `rudolint-settings`: resolved settings after config and CLI overrides.
+- `rudolint-shell`: shell parsing and `RUN` command analysis.
+- `rudolint-source`: source text, spans, comments, and edit ranges.
 
 ## Parser
 
-The parser owns source spans and Dockerfile syntax. It should understand:
+`rudolint-dockerfile` owns source spans and Dockerfile syntax. It should
+understand:
 
 - parser directives
 - instruction continuations
@@ -32,14 +53,14 @@ This layer is intentionally thin at the baseline stage.
 
 ## Rules
 
-Rules consume the model and produce diagnostics. Rules must be deterministic and
-must not perform network or filesystem access unless the CLI explicitly enables
-repository-wide analysis.
+`rudolint-rules` consumes the model and produces diagnostics. Rules must be
+deterministic and must not perform network or filesystem access unless the CLI
+explicitly enables repository-wide analysis.
 
 Compatibility rules live under `RDL` and `RSC`. BuildKit-native rules live under
 `RDK`.
 
 ## Output
 
-Output renderers convert diagnostics into human text, JSON, SARIF, and future
+`rudolint-output` converts diagnostics into human text, JSON, SARIF, and future
 editor/LSP responses. Renderers must not change rule behavior.

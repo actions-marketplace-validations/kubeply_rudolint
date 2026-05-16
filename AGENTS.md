@@ -8,14 +8,20 @@ dependency in the normal `rudolint check` path.
 
 ## Working Rules
 
+- Keep workspace crates focused. If a change touches multiple crates, the
+  dependency direction should still be CLI -> output/rules/config -> parser and
+  diagnostics, not the reverse.
+- Placeholder crates are intentional. Put new implementation in the matching
+  crate instead of expanding `rudolint-cli` or `rudolint-rules` by default.
 - Keep parsing, diagnostics, and rule evaluation separated.
 - Treat compatibility tests as oracle tests, not as runtime behavior.
 - Prefer source-span preserving parsers and deterministic diagnostics.
 - Do not copy third-party rule descriptions wholesale into source or docs.
 - Add new rules with focused fixtures and JSON/SARIF output coverage.
 - Always attempt to add a test case for changed behavior.
-- Prefer integration tests under `tests/` for CLI and rule behavior. Use unit
-  tests for parser/model edge cases that are awkward to express through the CLI.
+- Prefer integration tests under each crate's `tests/` directory for CLI and
+  rule behavior. Use unit tests for parser/model edge cases that are awkward to
+  express through the CLI.
 - Prefer `insta` snapshots for structured diagnostics and SARIF/JSON output
   instead of broad substring assertions.
 - Read nearby tests before adding new cases and keep the style consistent.
@@ -48,6 +54,7 @@ dependency in the normal `rudolint check` path.
 
 ```bash
 cargo fmt --all -- --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
+cargo check --all-targets --all-features --locked
+cargo clippy --all-targets --all-features --locked -- -D warnings
+cargo test --all-targets --all-features --locked
 ```

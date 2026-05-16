@@ -1,0 +1,10 @@
+[package]
+name = "rudolint-lsp"
+version.workspace = true
+edition.workspace = true
+description = "Language server support for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+rudolint-diagnostics.workspace = true

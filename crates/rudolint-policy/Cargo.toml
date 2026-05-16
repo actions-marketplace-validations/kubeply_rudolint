@@ -1,0 +1,11 @@
+[package]
+name = "rudolint-policy"
+version.workspace = true
+edition.workspace = true
+description = "Rule selection and policy profiles for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+rudolint-config.workspace = true
+rudolint-diagnostics.workspace = true

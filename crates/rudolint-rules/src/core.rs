@@ -1,8 +1,8 @@
 use std::collections::BTreeSet;
 
-use crate::diagnostic::{Finding, Severity};
-use crate::dockerfile::{Dockerfile, Instruction};
-use crate::rules::{Profile, Rule, RuleInfo, RuleStatus};
+use crate::{Profile, Rule, RuleInfo, RuleStatus};
+use rudolint_diagnostics::{Finding, Severity};
+use rudolint_dockerfile::{Dockerfile, Instruction};
 
 macro_rules! rule {
     ($name:ident, $code:literal, $severity:expr, $summary:literal, $body:expr) => {

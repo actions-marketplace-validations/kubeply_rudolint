@@ -3,10 +3,9 @@ mod core;
 use std::fmt;
 
 use clap::ValueEnum;
-
-use crate::config::Config;
-use crate::diagnostic::{Finding, Severity};
-use crate::dockerfile::Dockerfile;
+use rudolint_config::Config;
+use rudolint_diagnostics::{Finding, Severity};
+use rudolint_dockerfile::Dockerfile;
 
 #[derive(Debug, Clone, Copy, Default, ValueEnum)]
 pub enum Profile {

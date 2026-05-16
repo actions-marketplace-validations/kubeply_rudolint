@@ -1,0 +1,13 @@
+[package]
+name = "rudolint-rules"
+version.workspace = true
+edition.workspace = true
+description = "Rule engine for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+clap.workspace = true
+rudolint-config.workspace = true
+rudolint-diagnostics.workspace = true
+rudolint-dockerfile.workspace = true

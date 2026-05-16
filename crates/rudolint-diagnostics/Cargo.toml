@@ -1,0 +1,11 @@
+[package]
+name = "rudolint-diagnostics"
+version.workspace = true
+edition.workspace = true
+description = "Diagnostic types for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+clap.workspace = true
+serde.workspace = true

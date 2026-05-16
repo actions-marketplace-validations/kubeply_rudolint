@@ -3,9 +3,8 @@ use std::fs;
 use std::path::Path;
 
 use anyhow::{Context, Result};
+use rudolint_diagnostics::Severity;
 use serde::Deserialize;
-
-use crate::diagnostic::Severity;
 
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]

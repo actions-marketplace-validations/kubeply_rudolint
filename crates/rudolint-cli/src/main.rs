@@ -1,9 +1,4 @@
 mod cli;
-mod config;
-mod diagnostic;
-mod dockerfile;
-mod output;
-mod rules;
 
 use std::fs;
 use std::io::{self, Read};
@@ -14,10 +9,10 @@ use clap::Parser;
 use ignore::WalkBuilder;
 
 use crate::cli::{Cli, Command, OutputFormat};
-use crate::config::Config;
-use crate::diagnostic::Finding;
-use crate::dockerfile::parse_dockerfile;
-use crate::rules::{RuleEngine, RuleStatus};
+use rudolint_config::Config;
+use rudolint_diagnostics::Finding;
+use rudolint_dockerfile::parse_dockerfile;
+use rudolint_rules::{RuleEngine, RuleStatus};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -48,9 +43,9 @@ fn run_check(args: cli::CheckArgs) -> Result<()> {
     }
 
     let rendered = match args.format {
-        OutputFormat::Human => output::human(&findings),
-        OutputFormat::Json => output::json(&findings)?,
-        OutputFormat::Sarif => output::sarif(&findings)?,
+        OutputFormat::Human => rudolint_output::human(&findings),
+        OutputFormat::Json => rudolint_output::json(&findings)?,
+        OutputFormat::Sarif => rudolint_output::sarif(&findings)?,
     };
     print!("{rendered}");
 

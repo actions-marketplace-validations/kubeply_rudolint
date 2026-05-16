@@ -1,9 +1,8 @@
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
-
-use crate::diagnostic::Severity;
-use crate::rules::Profile;
+use rudolint_diagnostics::Severity;
+use rudolint_rules::Profile;
 
 #[derive(Debug, Parser)]
 #[command(author, version, about)]

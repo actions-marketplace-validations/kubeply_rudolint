@@ -1,0 +1,10 @@
+[package]
+name = "rudolint-buildkit"
+version.workspace = true
+edition.workspace = true
+description = "BuildKit and Buildx semantic model for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+rudolint-dockerfile.workspace = true

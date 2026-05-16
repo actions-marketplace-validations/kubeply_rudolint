@@ -1,0 +1,10 @@
+[package]
+name = "rudolint-settings"
+version.workspace = true
+edition.workspace = true
+description = "Resolved settings for rudolint"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+rudolint-config.workspace = true
