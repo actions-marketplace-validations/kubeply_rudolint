@@ -85,7 +85,7 @@ jobs:
     name: compatibility oracle
     runs-on: depot-ubuntu-24.04
     timeout-minutes: 10
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run-oracle == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['run-oracle'] == 'true' }}
     env:
       RUDOLINT_ORACLE_BIN: hadolint
     steps:
