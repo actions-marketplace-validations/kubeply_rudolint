@@ -61,7 +61,14 @@ mod tests {
                 "directory-tree"
             ]
         );
-        assert_eq!(corpora[0].kind, CorpusKind::SingleFile);
-        assert_eq!(corpora[3].kind, CorpusKind::Directory);
+        assert_eq!(
+            corpora.iter().map(|corpus| corpus.kind).collect::<Vec<_>>(),
+            [
+                CorpusKind::SingleFile,
+                CorpusKind::SingleFile,
+                CorpusKind::SingleFile,
+                CorpusKind::Directory,
+            ]
+        );
     }
 }

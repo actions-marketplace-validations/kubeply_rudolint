@@ -1,2 +1,2 @@
-FROM alpine:latest
+FROM alpine:3.20
 WORKDIR /api
