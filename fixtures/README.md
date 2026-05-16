@@ -18,10 +18,15 @@ exercise.
 - Parser fixtures use `parser/<feature-name>/Dockerfile`.
 - Rule fixtures use `rules/<rule-id>.<short-name>/Dockerfile`.
 - CLI fixtures use `cli/<behavior-name>/`.
+- BuildKit fixtures use `buildkit/<feature-name>/Dockerfile`.
 - Compatibility fixtures use `compat/<rule-id>.<short-name>/Dockerfile`.
+- Corpus fixtures use `corpus/<case-name>/Dockerfile`, or
+  `corpus/<case-name>/` when a benchmark case needs multiple files.
 
 Use lowercase names with hyphens for descriptive parts, for example
-`rules/RDL3007.no-latest-tag/Dockerfile`.
+`rules/RDL3007.no-latest-tag/Dockerfile`,
+`buildkit/multi-stage-cache/Dockerfile`, or
+`corpus/large-image-scan/Dockerfile`.
 
 ## Per-Fixture Files
 
