@@ -6,15 +6,15 @@ use rudolint_test::{fixture_path, normalized_json};
 #[ignore = "requires a pinned external oracle binary"]
 fn parity_oracle_is_available() {
     let oracle = env::var("RUDOLINT_ORACLE_BIN").unwrap_or_else(|_| "hadolint".to_string());
-    let output = Command::new(oracle)
+    let output = Command::new(&oracle)
         .arg("--version")
         .output()
-        .expect("RUDOLINT_ORACLE_BIN must point to an installed oracle binary");
+        .unwrap_or_else(|_| panic!("failed to spawn or run oracle binary '{oracle}'"));
     assert!(output.status.success());
 }
 
 #[test]
-#[ignore = "requires RUDOLINT_ORACLE_BIN and intentionally runs an external oracle"]
+#[ignore = "requires RUDOLINT_ORACLE_BIN pointing to hadolint"]
 fn normalizes_hadolint_json_oracle_output() {
     let oracle = env::var("RUDOLINT_ORACLE_BIN")
         .expect("set RUDOLINT_ORACLE_BIN to run compatibility oracle tests");
@@ -25,6 +25,12 @@ fn normalizes_hadolint_json_oracle_output() {
         .arg(&fixture)
         .output()
         .expect("oracle should run");
+
+    assert!(
+        output.status.success(),
+        "oracle command exited with failure: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     assert!(
         !output.stdout.is_empty(),
