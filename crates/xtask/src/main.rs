@@ -46,7 +46,7 @@ fn update_hadolint_oracle() -> Result<(), String> {
         }
     });
 
-    let output_path = workspace_root().join("fixtures/compat/oracles/hadolint.json");
+    let output_path = workspace_root()?.join("fixtures/compat/oracles/hadolint.json");
     let parent = output_path
         .parent()
         .ok_or_else(|| format!("{} has no parent directory", output_path.display()))?;
@@ -64,10 +64,10 @@ fn update_hadolint_oracle() -> Result<(), String> {
     Ok(())
 }
 
-fn workspace_root() -> PathBuf {
+fn workspace_root() -> Result<PathBuf, String> {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(Path::parent)
-        .expect("xtask should live under crates/xtask")
-        .to_path_buf()
+        .map(Path::to_path_buf)
+        .ok_or_else(|| "failed to resolve workspace root from CARGO_MANIFEST_DIR".to_string())
 }
