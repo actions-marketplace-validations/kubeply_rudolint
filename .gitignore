@@ -1,1 +1,25 @@
 /target
+
+# Editor and OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Test and coverage artifacts
+*.profraw
+coverage/
+lcov.info
+
+# insta snapshots awaiting review
+*.snap.new
+
+# Local release artifacts
+/dist/
+/artifacts/

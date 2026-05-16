@@ -17,6 +17,7 @@ concurrency:
 env:
   CARGO_INCREMENTAL: "0"
   CARGO_TERM_COLOR: always
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   quality:
@@ -31,9 +32,7 @@ jobs:
         uses: raven-actions/actionlint@v2
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
+        uses: dtolnay/rust-toolchain@master
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
@@ -49,3 +48,6 @@ jobs:
 
       - name: Test
         run: cargo test --all-targets --all-features --locked
+
+      - name: Check dependencies
+        uses: EmbarkStudios/cargo-deny-action@v2

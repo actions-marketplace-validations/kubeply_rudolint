@@ -1,0 +1,16 @@
+doc-valid-idents = [
+  "BuildKit",
+  "Buildx",
+  "Dockerfile",
+  "Dockerfiles",
+  "JSON",
+  "SARIF",
+  "SPDX",
+  "LSP",
+  "CLI",
+  "CI",
+  "GitHub",
+  "GitLab",
+  "AArch64",
+  "..",
+]

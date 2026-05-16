@@ -8,6 +8,8 @@ dependency in the normal `rudolint check` path.
 
 ## Working Rules
 
+- Read `CONTRIBUTING.md`, `crates/README.md`, and `docs/architecture.md` before
+  making structural changes.
 - Keep workspace crates focused. If a change touches multiple crates, the
   dependency direction should still be CLI -> output/rules/config -> parser and
   diagnostics, not the reverse.

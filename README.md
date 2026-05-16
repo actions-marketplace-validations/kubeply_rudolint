@@ -138,6 +138,9 @@ fixtures and documented hardware/OS metadata.
 
 ## Development
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, validation, and contribution
+guidelines.
+
 The Rust code is organized as a Cargo workspace under `crates/`:
 
 - `rudolint`: binary crate and CLI orchestration
