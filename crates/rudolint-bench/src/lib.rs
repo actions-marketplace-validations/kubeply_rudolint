@@ -2,19 +2,31 @@
 
 use std::path::{Path, PathBuf};
 
+/// Metadata for a built-in benchmark corpus fixture.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BenchmarkCorpus {
+    /// Stable human-readable corpus identifier.
     pub name: String,
+    /// Corpus shape used to decide how benchmark runners discover inputs.
     pub kind: CorpusKind,
+    /// Filesystem location of the corpus fixture.
     pub path: PathBuf,
 }
 
+/// Distinguishes single-file and directory-tree benchmark corpora.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CorpusKind {
+    /// One Dockerfile at the corpus path.
     SingleFile,
+    /// A directory that can contain multiple Dockerfile inputs.
     Directory,
 }
 
+/// Returns built-in [`BenchmarkCorpus`] metadata under `root/fixtures/corpus`.
+///
+/// `root` is the repository or workspace root used to resolve the fixture
+/// directory. The returned list is deterministic and includes each corpus name,
+/// [`CorpusKind`], and [`PathBuf`].
 pub fn benchmark_corpora(root: impl AsRef<Path>) -> Vec<BenchmarkCorpus> {
     let root = root.as_ref().join("fixtures/corpus");
     vec![
@@ -70,5 +82,21 @@ mod tests {
                 CorpusKind::Directory,
             ]
         );
+        assert!(
+            corpora[0]
+                .path
+                .ends_with("fixtures/corpus/small/Dockerfile")
+        );
+        assert!(
+            corpora[1]
+                .path
+                .ends_with("fixtures/corpus/medium-multistage/Dockerfile")
+        );
+        assert!(
+            corpora[2]
+                .path
+                .ends_with("fixtures/corpus/large-generated/Dockerfile")
+        );
+        assert!(corpora[3].path.ends_with("fixtures/corpus/directory-tree"));
     }
 }
