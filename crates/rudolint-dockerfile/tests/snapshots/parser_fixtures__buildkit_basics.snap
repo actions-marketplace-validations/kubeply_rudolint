@@ -72,6 +72,14 @@ expression: document_json(&document)
       "mounts": []
     },
     {
+      "args": "alpine:3.20 AS final",
+      "flags": [],
+      "heredocs": [],
+      "keyword": "FROM",
+      "line": 7,
+      "mounts": []
+    },
+    {
       "args": "--from=base /src /dst",
       "flags": [
         [
@@ -81,7 +89,7 @@ expression: document_json(&document)
       ],
       "heredocs": [],
       "keyword": "COPY",
-      "line": 7,
+      "line": 8,
       "mounts": []
     }
   ],
