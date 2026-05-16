@@ -28,7 +28,16 @@ fn update_hadolint_oracle() -> Result<(), String> {
         .map_err(|error| format!("failed to run {binary}: {error}"))?;
 
     if !output.status.success() {
-        return Err(format!("{binary} --version exited with {}", output.status));
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        let details = if stderr.is_empty() {
+            "no stderr output".to_string()
+        } else {
+            stderr
+        };
+        return Err(format!(
+            "{binary} --version exited with {} ({details})",
+            output.status
+        ));
     }
 
     let version_output = String::from_utf8(output.stdout)
