@@ -11,6 +11,7 @@ pub(crate) fn rules() -> Vec<Box<dyn Rule>> {
         Box::new(SecretInRun),
         Box::new(CacheMountForPackageInstall),
         Box::new(SecretMountCopiedToLayer),
+        Box::new(SshMountCommandScope),
     ]
 }
 
@@ -168,7 +169,7 @@ impl Rule for SecretInRun {
 mod tests {
     use super::{
         has_secret_like_arg_or_env_name, invocation_copies_secret, path_is_at_or_under,
-        source_operands,
+        shell_wrapper_command, source_operands,
     };
     use rudolint_shell::ShellCommandInvocation;
 
@@ -391,6 +392,14 @@ mod tests {
             ),
             vec!["secret"]
         );
+    }
+
+    #[test]
+    fn ssh_scope_detection_accepts_path_qualified_shell_wrappers() {
+        assert!(shell_wrapper_command("sh"));
+        assert!(shell_wrapper_command("/bin/sh"));
+        assert!(shell_wrapper_command("/usr/bin/bash"));
+        assert!(!shell_wrapper_command("git"));
     }
 }
 
@@ -831,4 +840,59 @@ fn path_is_at_or_under(path: &str, target: &str) -> bool {
         || path
             .strip_prefix(target)
             .is_some_and(|suffix| suffix.starts_with('/'))
+}
+
+rule_metadata!(
+    SshMountCommandScope,
+    "RDK1005",
+    "ssh-mount-command-scope",
+    Severity::Warning,
+    "scope BuildKit SSH mounts to the command that needs the agent"
+);
+
+impl Rule for SshMountCommandScope {
+    fn info(&self) -> RuleInfo {
+        self.metadata_info()
+    }
+
+    fn check(&self, doc: &Dockerfile) -> Vec<Finding> {
+        doc.instructions
+            .iter()
+            .filter(|instruction| instruction.keyword == "RUN")
+            .filter(|instruction| {
+                instruction
+                    .mounts
+                    .iter()
+                    .any(|mount| mount.mount_type == "ssh")
+            })
+            .filter(|instruction| {
+                instruction
+                    .run
+                    .as_ref()
+                    .and_then(|run| run.shell.as_ref())
+                    .is_some_and(|shell| ssh_mount_scope_is_broad(&shell.text))
+            })
+            .map(|instruction| {
+                diagnostic(
+                    "RDK1005",
+                    Severity::Warning,
+                    "SSH mount scope is broader than a single command invocation",
+                    instruction,
+                )
+            })
+            .collect()
+    }
+}
+
+fn ssh_mount_scope_is_broad(shell: &str) -> bool {
+    let invocations = detect_command_invocations(shell);
+    invocations.len() > 1
+        || invocations
+            .first()
+            .is_some_and(|invocation| shell_wrapper_command(&invocation.command))
+}
+
+fn shell_wrapper_command(command: &str) -> bool {
+    let wrapper_name = command.rsplit('/').next().unwrap_or(command);
+    matches!(wrapper_name, "sh" | "bash" | "dash" | "ash" | "zsh")
 }
