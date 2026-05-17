@@ -1,8 +1,10 @@
 use crate::{Rule, RuleInfo, metadata::diagnostic, metadata::rule_metadata};
 use rudolint_diagnostics::{Finding, Severity};
-use rudolint_dockerfile::{Dockerfile, Mount};
+use rudolint_dockerfile::{Dockerfile, Instruction, Mount};
 use rudolint_fix::{FixApplicability, FixPreview, TextEdit};
-use rudolint_shell::{ShellCommandInvocation, detect_command_invocations};
+use rudolint_shell::{
+    PackageManager, ShellCommandInvocation, detect_command_invocations, detect_package_managers,
+};
 
 pub(crate) fn rules() -> Vec<Box<dyn Rule>> {
     vec![
@@ -13,6 +15,7 @@ pub(crate) fn rules() -> Vec<Box<dyn Rule>> {
         Box::new(SecretMountCopiedToLayer),
         Box::new(SshMountCommandScope),
         Box::new(CacheMountStableId),
+        Box::new(CacheMountSafeSharing),
     ]
 }
 
@@ -948,4 +951,85 @@ fn mount_option<'a>(mount: &'a Mount, name: &str) -> Option<&'a str> {
         .options
         .iter()
         .find_map(|(key, value)| (key == name && !value.is_empty()).then_some(value.as_str()))
+}
+
+rule_metadata!(
+    CacheMountSafeSharing,
+    "RDK1007",
+    "cache-mount-safe-sharing",
+    Severity::Warning,
+    "require safe cache mount sharing for lock-based package managers"
+);
+
+impl Rule for CacheMountSafeSharing {
+    fn info(&self) -> RuleInfo {
+        self.metadata_info()
+    }
+
+    fn check(&self, doc: &Dockerfile) -> Vec<Finding> {
+        doc.instructions
+            .iter()
+            .filter(|instruction| instruction.keyword == "RUN")
+            .filter(|instruction| {
+                run_uses_lock_based_package_manager_with_shared_cache(instruction)
+            })
+            .map(|instruction| {
+                diagnostic(
+                    "RDK1007",
+                    Severity::Warning,
+                    "cache mount for lock-based package manager should use sharing=locked",
+                    instruction,
+                )
+            })
+            .collect()
+    }
+}
+
+fn run_uses_lock_based_package_manager_with_shared_cache(instruction: &Instruction) -> bool {
+    let detected_lock_managers = instruction
+        .run
+        .as_ref()
+        .and_then(|run| run.shell.as_ref())
+        .map(|shell| {
+            detect_package_managers(&shell.text)
+                .into_iter()
+                .filter(|manager| package_manager_needs_locked_cache(*manager))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    !detected_lock_managers.is_empty()
+        && instruction.mounts.iter().any(|mount| {
+            mount.mount_type == "cache"
+                && cache_mount_matches_lock_manager(mount, &detected_lock_managers)
+                && matches!(mount_option(mount, "sharing"), None | Some("shared"))
+        })
+}
+
+fn cache_mount_matches_lock_manager(mount: &Mount, managers: &[PackageManager]) -> bool {
+    let target = mount_option(mount, "target")
+        .or_else(|| mount_option(mount, "dst"))
+        .or_else(|| mount_option(mount, "destination"));
+
+    target.is_some_and(|target| {
+        managers.iter().any(|manager| match manager {
+            PackageManager::Apt | PackageManager::AptGet => {
+                target.starts_with("/var/cache/apt") || target.starts_with("/var/lib/apt")
+            }
+            PackageManager::Dnf | PackageManager::Microdnf => target.starts_with("/var/cache/dnf"),
+            PackageManager::Yum => target.starts_with("/var/cache/yum"),
+            _ => false,
+        })
+    })
+}
+
+fn package_manager_needs_locked_cache(manager: PackageManager) -> bool {
+    matches!(
+        manager,
+        PackageManager::AptGet
+            | PackageManager::Apt
+            | PackageManager::Dnf
+            | PackageManager::Yum
+            | PackageManager::Microdnf
+    )
 }
