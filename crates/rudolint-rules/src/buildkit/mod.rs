@@ -19,6 +19,7 @@ pub(crate) fn rules() -> Vec<Box<dyn Rule>> {
         Box::new(CacheMountSafeSharing),
         Box::new(BuildkitEntitlementRequiresOptIn),
         Box::new(MultiPlatformHostArchitecture),
+        Box::new(FrontendVersionSupportsSyntax),
     ]
 }
 
@@ -175,7 +176,8 @@ impl Rule for SecretInRun {
 #[cfg(test)]
 mod tests {
     use super::{
-        has_secret_like_arg_or_env_name, invocation_copies_secret, path_is_at_or_under,
+        chmod_value_is_symbolic, has_secret_like_arg_or_env_name, invocation_copies_secret,
+        is_official_dockerfile_frontend, parse_pinned_frontend_version, path_is_at_or_under,
         shell_wrapper_command, source_operands,
     };
     use rudolint_shell::ShellCommandInvocation;
@@ -407,6 +409,34 @@ mod tests {
         assert!(shell_wrapper_command("/bin/sh"));
         assert!(shell_wrapper_command("/usr/bin/bash"));
         assert!(!shell_wrapper_command("git"));
+    }
+
+    #[test]
+    fn frontend_version_parser_handles_digests_and_rejects_invalid_patches() {
+        let version =
+            parse_pinned_frontend_version("docker/dockerfile:1.20@sha256:abcdef").unwrap();
+        assert_eq!(version.display(), "1.20");
+
+        let version = parse_pinned_frontend_version("docker/dockerfile:1.14-labs").unwrap();
+        assert_eq!(version.display(), "1.14-labs");
+
+        assert!(parse_pinned_frontend_version("docker/dockerfile:1").is_none());
+        assert!(parse_pinned_frontend_version("docker/dockerfile:1.2.bad").is_none());
+    }
+
+    #[test]
+    fn frontend_version_rule_gates_official_frontends_and_symbolic_chmod() {
+        assert!(is_official_dockerfile_frontend("docker/dockerfile:1.20"));
+        assert!(is_official_dockerfile_frontend(
+            "docker.io/docker/dockerfile:1.20@sha256:abcdef"
+        ));
+        assert!(!is_official_dockerfile_frontend(
+            "registry.example.com/custom/dockerfile:1.20"
+        ));
+
+        assert!(!chmod_value_is_symbolic("0755"));
+        assert!(chmod_value_is_symbolic("+x"));
+        assert!(chmod_value_is_symbolic("u=rwX,go=rX"));
     }
 }
 
@@ -1248,4 +1278,272 @@ fn invocation_uses_host_architecture_probe(invocation: &ShellCommandInvocation) 
             .any(|argument| argument == "--print-arch"),
         _ => false,
     }
+}
+
+rule_metadata!(
+    FrontendVersionSupportsSyntax,
+    "RDK1010",
+    "frontend-version-supports-syntax",
+    Severity::Warning,
+    "require a new enough Dockerfile frontend for used syntax"
+);
+
+impl Rule for FrontendVersionSupportsSyntax {
+    fn info(&self) -> RuleInfo {
+        self.metadata_info()
+    }
+
+    fn check(&self, doc: &Dockerfile) -> Vec<Finding> {
+        let Some(frontend) = doc
+            .syntax
+            .as_ref()
+            .filter(|syntax| is_official_dockerfile_frontend(&syntax.image))
+            .and_then(|syntax| parse_pinned_frontend_version(&syntax.image))
+        else {
+            return Vec::new();
+        };
+
+        doc.instructions
+            .iter()
+            .flat_map(|instruction| {
+                frontend_requirements(instruction)
+                    .into_iter()
+                    .filter(|requirement| frontend_version_is_too_old(frontend, requirement))
+                    .map(|requirement| {
+                        diagnostic(
+                            "RDK1010",
+                            Severity::Warning,
+                            format!(
+                                "{} requires Dockerfile frontend {}, but syntax directive pins {}",
+                                requirement.feature,
+                                requirement.version.display(),
+                                frontend.display(),
+                            ),
+                            instruction,
+                        )
+                    })
+            })
+            .collect()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct FrontendVersion {
+    major: u16,
+    minor: Option<u16>,
+    patch: Option<u16>,
+    labs: bool,
+}
+
+impl FrontendVersion {
+    fn display(self) -> String {
+        let mut version = self.major.to_string();
+        if let Some(minor) = self.minor {
+            version.push('.');
+            version.push_str(&minor.to_string());
+        }
+        if let Some(patch) = self.patch {
+            version.push('.');
+            version.push_str(&patch.to_string());
+        }
+        if self.labs {
+            version.push_str("-labs");
+        }
+        version
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct FrontendRequirement {
+    feature: &'static str,
+    version: FrontendVersion,
+}
+
+impl FrontendRequirement {
+    const fn stable(feature: &'static str, major: u16, minor: u16) -> Self {
+        Self {
+            feature,
+            version: FrontendVersion {
+                major,
+                minor: Some(minor),
+                patch: None,
+                labs: false,
+            },
+        }
+    }
+
+    const fn labs(feature: &'static str, major: u16, minor: u16) -> Self {
+        Self {
+            feature,
+            version: FrontendVersion {
+                major,
+                minor: Some(minor),
+                patch: None,
+                labs: true,
+            },
+        }
+    }
+}
+
+fn is_official_dockerfile_frontend(image: &str) -> bool {
+    let reference = image
+        .split_once('@')
+        .map_or(image, |(reference, _)| reference);
+    let Some((name, _)) = reference.rsplit_once(':') else {
+        return false;
+    };
+
+    matches!(
+        name,
+        "docker/dockerfile"
+            | "docker.io/docker/dockerfile"
+            | "index.docker.io/docker/dockerfile"
+            | "registry-1.docker.io/docker/dockerfile"
+    )
+}
+
+fn parse_pinned_frontend_version(image: &str) -> Option<FrontendVersion> {
+    let reference = image
+        .split_once('@')
+        .map_or(image, |(reference, _)| reference);
+    let (_, tag) = reference.rsplit_once(':')?;
+    let (version, labs) = tag
+        .strip_suffix("-labs")
+        .map_or((tag, false), |version| (version, true));
+    let parts = version.split('.').collect::<Vec<_>>();
+    if parts.len() < 2 || parts.len() > 3 {
+        return None;
+    }
+
+    let major = parts.first()?.parse().ok()?;
+    let minor = parts.get(1)?.parse().ok()?;
+    let patch = match parts.get(2) {
+        Some(patch) => Some(patch.parse().ok()?),
+        None => None,
+    };
+
+    Some(FrontendVersion {
+        major,
+        minor: Some(minor),
+        patch,
+        labs,
+    })
+}
+
+fn frontend_requirements(instruction: &Instruction) -> Vec<FrontendRequirement> {
+    let mut requirements = Vec::new();
+
+    if !instruction.heredocs.is_empty() {
+        requirements.push(FrontendRequirement::stable(
+            "Dockerfile here-document syntax",
+            1,
+            4,
+        ));
+    }
+
+    match instruction.keyword.as_str() {
+        "RUN" => {
+            for (name, _) in &instruction.flags {
+                match name.as_str() {
+                    "device" => {
+                        requirements.push(FrontendRequirement::labs("RUN --device", 1, 14));
+                    }
+                    "mount" => {
+                        requirements.push(FrontendRequirement::stable("RUN --mount", 1, 2));
+                    }
+                    "network" => {
+                        requirements.push(FrontendRequirement::stable("RUN --network", 1, 3));
+                    }
+                    "security" => {
+                        requirements.push(FrontendRequirement::stable("RUN --security", 1, 20));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        "ADD" => {
+            for (name, value) in &instruction.flags {
+                match name.as_str() {
+                    "keep-git-dir" => {
+                        requirements.push(FrontendRequirement::stable("ADD --keep-git-dir", 1, 1));
+                    }
+                    "checksum" => {
+                        requirements.push(FrontendRequirement::stable("ADD --checksum", 1, 6));
+                    }
+                    "chmod" => {
+                        requirements.push(chmod_frontend_requirement("ADD --chmod", value));
+                    }
+                    "link" => {
+                        requirements.push(FrontendRequirement::stable("ADD --link", 1, 4));
+                    }
+                    "unpack" => {
+                        requirements.push(FrontendRequirement::stable("ADD --unpack", 1, 17));
+                    }
+                    "exclude" => {
+                        requirements.push(FrontendRequirement::stable("ADD --exclude", 1, 19));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        "COPY" => {
+            for (name, value) in &instruction.flags {
+                match name.as_str() {
+                    "chmod" => {
+                        requirements.push(chmod_frontend_requirement("COPY --chmod", value));
+                    }
+                    "link" => {
+                        requirements.push(FrontendRequirement::stable("COPY --link", 1, 4));
+                    }
+                    "parents" => {
+                        requirements.push(FrontendRequirement::stable("COPY --parents", 1, 20));
+                    }
+                    "exclude" => {
+                        requirements.push(FrontendRequirement::stable("COPY --exclude", 1, 19));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        _ => {}
+    }
+
+    requirements
+}
+
+fn chmod_frontend_requirement(feature: &'static str, value: &str) -> FrontendRequirement {
+    if chmod_value_is_symbolic(value) {
+        FrontendRequirement::stable(feature, 1, 14)
+    } else {
+        FrontendRequirement::stable(feature, 1, 2)
+    }
+}
+
+fn chmod_value_is_symbolic(value: &str) -> bool {
+    value.chars().any(|character| {
+        matches!(
+            character,
+            '+' | '-' | '=' | 'u' | 'g' | 'o' | 'a' | 'r' | 'w' | 'x' | 'X' | 's' | 't'
+        )
+    })
+}
+
+fn frontend_version_is_too_old(
+    frontend: FrontendVersion,
+    requirement: &FrontendRequirement,
+) -> bool {
+    if requirement.version.labs && !frontend.labs {
+        return true;
+    }
+    if frontend.major != requirement.version.major {
+        return frontend.major < requirement.version.major;
+    }
+
+    let frontend_minor = frontend.minor.unwrap_or_default();
+    let required_minor = requirement.version.minor.unwrap_or_default();
+    if frontend_minor != required_minor {
+        return frontend_minor < required_minor;
+    }
+
+    frontend.patch.unwrap_or_default() < requirement.version.patch.unwrap_or_default()
 }
