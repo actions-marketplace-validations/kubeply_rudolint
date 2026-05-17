@@ -74,6 +74,7 @@ pub(crate) fn rules() -> Vec<Box<dyn Rule>> {
         Box::new(DeprecatedMaintainer),
         Box::new(EitherWgetOrCurl),
         Box::new(UseShellForDefaultShell),
+        Box::new(PipefailBeforePipe),
         Box::new(SingleCmd),
         Box::new(SingleEntrypoint),
     ]
@@ -2469,6 +2470,43 @@ impl Rule for UseShellForDefaultShell {
 }
 
 rule_metadata!(
+    PipefailBeforePipe,
+    "RDL4006",
+    "pipefail-before-pipe",
+    Severity::Warning,
+    "set pipefail before RUN instructions with pipes"
+);
+
+impl Rule for PipefailBeforePipe {
+    fn info(&self) -> RuleInfo {
+        self.metadata_info()
+    }
+
+    fn check(&self, doc: &Dockerfile) -> Vec<Finding> {
+        let mut shell_handles_pipes = false;
+        let mut findings = Vec::new();
+
+        for instruction in &doc.instructions {
+            match instruction.keyword.as_str() {
+                "FROM" => shell_handles_pipes = false,
+                "SHELL" => shell_handles_pipes = shell_instruction_handles_pipes(instruction),
+                "RUN" if !shell_handles_pipes && run_has_pipe(instruction) => {
+                    findings.push(diagnostic(
+                        "RDL4006",
+                        Severity::Warning,
+                        "set the SHELL option -o pipefail before RUN with a pipe in it",
+                        instruction,
+                    ));
+                }
+                _ => {}
+            }
+        }
+
+        findings
+    }
+}
+
+rule_metadata!(
     SingleCmd,
     "RDL4003",
     "single-cmd",
@@ -3425,6 +3463,116 @@ fn run_links_default_shell(instruction: &Instruction) -> bool {
                             && argument.chars().skip(1).any(|flag| flag == 's'))
                 })
         })
+}
+
+fn shell_instruction_handles_pipes(instruction: &Instruction) -> bool {
+    match &instruction.form {
+        InstructionForm::Json(parts) => {
+            let Some(shell) = parts.first().map(String::as_str) else {
+                return false;
+            };
+            let shell = normalized_shell_executable(shell);
+
+            shell_is_non_posix(&shell)
+                || (shell_supports_pipefail(&shell)
+                    && parts
+                        .windows(2)
+                        .any(|window| window[0] == "-o" && window[1] == "pipefail"))
+        }
+        InstructionForm::Shell { text, .. } => {
+            let shell = text
+                .split_whitespace()
+                .next()
+                .map(normalized_shell_executable)
+                .unwrap_or_default();
+
+            shell_is_non_posix(&shell)
+                || (shell_supports_pipefail(&shell)
+                    && text
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .windows(2)
+                        .any(|window| window[0] == "-o" && window[1] == "pipefail"))
+        }
+        _ => false,
+    }
+}
+
+fn normalized_shell_executable(shell: &str) -> String {
+    shell
+        .trim_matches('"')
+        .trim_matches('\'')
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(shell)
+        .to_ascii_lowercase()
+}
+
+fn shell_is_non_posix(shell: &str) -> bool {
+    matches!(
+        shell,
+        "powershell" | "powershell.exe" | "pwsh" | "pwsh.exe" | "cmd" | "cmd.exe"
+    )
+}
+
+fn shell_supports_pipefail(shell: &str) -> bool {
+    matches!(shell, "bash" | "bash.exe" | "zsh" | "zsh.exe" | "ash")
+}
+
+fn run_has_pipe(instruction: &Instruction) -> bool {
+    instruction
+        .run
+        .as_ref()
+        .and_then(|run| run.shell.as_ref())
+        .is_some_and(|shell| shell_text_has_pipeline_operator(&shell.text))
+}
+
+fn shell_text_has_pipeline_operator(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    let mut index = 0usize;
+    let mut in_single_quote = false;
+    let mut in_double_quote = false;
+    let mut escaped = false;
+
+    while index < bytes.len() {
+        let byte = bytes[index];
+
+        if escaped {
+            escaped = false;
+            index += 1;
+            continue;
+        }
+
+        if byte == b'\\' && !in_single_quote {
+            escaped = true;
+            index += 1;
+            continue;
+        }
+
+        if byte == b'\'' && !in_double_quote {
+            in_single_quote = !in_single_quote;
+            index += 1;
+            continue;
+        }
+
+        if byte == b'"' && !in_single_quote {
+            in_double_quote = !in_double_quote;
+            index += 1;
+            continue;
+        }
+
+        if !in_single_quote && !in_double_quote && byte == b'|' {
+            let previous_is_pipe = index > 0 && bytes[index - 1] == b'|';
+            let next_is_pipe = index + 1 < bytes.len() && bytes[index + 1] == b'|';
+            if !previous_is_pipe && !next_is_pipe {
+                return true;
+            }
+        }
+
+        index += 1;
+    }
+
+    false
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -4422,5 +4570,5 @@ fn dnf_install_has_unpinned_packages(shell: &str) -> bool {
 }
 
 pub(crate) fn planned_catalog() -> Vec<&'static str> {
-    vec!["RDL4006"]
+    Vec::new()
 }
