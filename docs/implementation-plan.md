@@ -571,32 +571,33 @@ Acceptance criteria:
 Goal: make `rudolint` meaningfully better for modern Docker builds instead of
 only matching compatibility rules.
 
-1. Reimplement `RDK1000` on typed BuildKit feature facts.
-2. Reimplement `RDK1001` using ARG and ENV semantic facts.
-3. Reimplement `RDK1002` using shell and secret mount facts.
-4. Reimplement `RDK1003` using package-manager and cache mount facts.
-5. Implement `RDK1004`: secret mount target copied into an image layer.
-6. Implement `RDK1005`: SSH mount used without explicit command scoping.
-7. Implement `RDK1006`: cache mount missing stable `id` in multi-stage builds.
-8. Implement `RDK1007`: cache mount sharing mode unsafe for common package
+1. [x] Reimplement `RDK1000` on typed BuildKit feature facts.
+2. [x] Reimplement `RDK1001` using ARG and ENV semantic facts.
+3. [x] Reimplement `RDK1002` using shell and secret mount facts.
+4. [x] Reimplement `RDK1003` using package-manager and cache mount facts.
+5. [x] Implement `RDK1004`: secret mount target copied into an image layer.
+6. [x] Implement `RDK1005`: SSH mount used without explicit command scoping.
+7. [x] Implement `RDK1006`: cache mount missing stable `id` in multi-stage
+   builds.
+8. [x] Implement `RDK1007`: cache mount sharing mode unsafe for common package
    managers.
-9. Implement `RDK1008`: BuildKit network or security entitlement used without
-   config opt-in.
-10. Implement `RDK1009`: multi-platform build uses host architecture
+9. [x] Implement `RDK1008`: BuildKit network or security entitlement used
+   without config opt-in.
+10. [x] Implement `RDK1009`: multi-platform build uses host architecture
     accidentally.
-11. Implement `RDK1010`: frontend version too old for the used syntax.
-12. Add BuildKit fixtures for every mount type:
-    - `cache`.
-    - `secret`.
-    - `ssh`.
-    - `bind`.
-    - `tmpfs`.
-13. Add Buildx fixtures for:
-    - `TARGETPLATFORM`.
-    - `BUILDPLATFORM`.
-    - `TARGETARCH`.
-    - `TARGETOS`.
-    - `FROM --platform`.
+11. [x] Implement `RDK1010`: frontend version too old for the used syntax.
+12. [x] Add BuildKit fixtures for every mount type:
+    - [x] `cache`.
+    - [x] `secret`.
+    - [x] `ssh`.
+    - [x] `bind`.
+    - [x] `tmpfs`.
+13. [x] Add Buildx fixtures for:
+    - [x] `TARGETPLATFORM`.
+    - [x] `BUILDPLATFORM`.
+    - [x] `TARGETARCH`.
+    - [x] `TARGETOS`.
+    - [x] `FROM --platform`.
 
 Acceptance criteria:
 

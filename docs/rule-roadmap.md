@@ -125,9 +125,6 @@ Implemented:
 - `RDK1001`: Secret-like build input declared as `ARG` or `ENV`.
 - `RDK1002`: Secret-like value passed through `RUN` without secret mount.
 - `RDK1003`: Package install step without cache mount opportunity.
-
-Planned:
-
 - `RDK1004`: Secret mount target copied into an image layer.
 - `RDK1005`: SSH mount used without explicit command scoping.
 - `RDK1006`: Cache mount missing stable `id` in multi-stage builds.
@@ -135,3 +132,8 @@ Planned:
 - `RDK1008`: BuildKit network/security entitlement used without config opt-in.
 - `RDK1009`: Multi-platform build uses host architecture accidentally.
 - `RDK1010`: Frontend version too old for used syntax.
+
+Planned:
+
+No BuildKit-native rules are currently planned in this roadmap. New BuildKit
+IDs should be added here when they are intentionally tracked.

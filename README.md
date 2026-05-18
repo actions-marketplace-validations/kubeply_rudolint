@@ -134,7 +134,7 @@ The intended loop is:
 4. Keep `rudolint --profile compat --format json` stable for CI users.
 5. Add BuildKit-aware `RDK` diagnostics in the default profile.
 
-## BuildKit Rules Planned
+## BuildKit Rule Coverage
 
 - flag secret-like `ARG` and `ENV` names
 - prefer `RUN --mount=type=secret` over build arguments for secrets
