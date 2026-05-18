@@ -94,9 +94,18 @@ Exit codes:
 ignore:
   - RDK1003
 
+select:
+  - RDL
+  - RDK1008
+
 severity:
   RDL3007: error
   RDK1000: warning
+
+per-file-ignores:
+  # Patterns are matched relative to this config file's directory.
+  fixtures/**:
+    - RDL3000
 
 trusted-registries:
   - docker.io

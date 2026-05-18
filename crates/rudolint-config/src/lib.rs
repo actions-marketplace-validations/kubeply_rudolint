@@ -3,6 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
+use globset::Glob;
 use rudolint_diagnostics::Severity;
 use serde::Deserialize;
 
@@ -46,9 +47,11 @@ impl Config {
         };
         let raw = fs::read_to_string(path)
             .with_context(|| format!("failed to read {}", path.display()))?;
-        serde_yaml::from_str(&raw)
+        let config = serde_yaml::from_str(&raw)
             .map_err(|error| parse_error(path, error))
-            .with_context(|| format!("failed to parse {}", path.display()))
+            .with_context(|| format!("failed to parse {}", path.display()))?;
+        validate_per_file_ignore_patterns(&config, path)?;
+        Ok(config)
     }
 
     /// Loads an explicit config or discovers `.rudolint.yaml` from the provided start paths.
@@ -64,13 +67,57 @@ impl Config {
 
     /// Returns true when `code` is ignored by either ignore list.
     pub fn ignores(&self, code: &str) -> bool {
-        self.ignore.contains(code) || self.extend_ignore.contains(code)
+        code_matches_any(code, &self.ignore) || code_matches_any(code, &self.extend_ignore)
+    }
+
+    /// Returns true when `code` is selected by configuration.
+    ///
+    /// An empty select list means all rules selected by the active profile are enabled.
+    /// Entries may be exact rule codes such as `RDL3000` or prefixes such as `RDK`.
+    pub fn selects(&self, code: &str) -> bool {
+        self.select.is_empty() || code_matches_any(code, &self.select)
+    }
+
+    /// Returns true when `code` is ignored for `path` by a per-file ignore pattern.
+    pub fn ignores_for_path(&self, code: &str, path: &Path) -> bool {
+        self.per_file_ignores.iter().any(|(pattern, codes)| {
+            code_matches_any(code, codes) && path_matches_pattern(path, pattern)
+        })
     }
 
     /// Returns the configured severity override for `code`, if present.
     pub fn severity_override(&self, code: &str) -> Option<Severity> {
         self.severity.get(code).copied()
     }
+}
+
+fn code_matches_any(code: &str, targets: &BTreeSet<String>) -> bool {
+    targets
+        .iter()
+        .any(|target| code_matches_target(code, target))
+}
+
+fn code_matches_target(code: &str, target: &str) -> bool {
+    code == target || code.starts_with(target)
+}
+
+fn path_matches_pattern(path: &Path, pattern: &str) -> bool {
+    Glob::new(pattern)
+        .expect("per-file ignore glob should be validated at config load time")
+        .compile_matcher()
+        .is_match(path)
+}
+
+fn validate_per_file_ignore_patterns(config: &Config, path: &Path) -> Result<()> {
+    for pattern in config.per_file_ignores.keys() {
+        Glob::new(pattern).with_context(|| {
+            format!(
+                "invalid per-file-ignores pattern `{pattern}` in {}",
+                path.display()
+            )
+        })?;
+    }
+    Ok(())
 }
 
 fn parse_error(path: &Path, error: serde_yaml::Error) -> anyhow::Error {
@@ -147,6 +194,8 @@ per-file-ignores:
         .expect("config should parse");
 
         assert!(config.select.contains("RDL"));
+        assert!(config.selects("RDL3000"));
+        assert!(!config.selects("RDK1000"));
         assert!(config.ignores("RDL1001"));
         assert!(config.ignores("RDL3007"));
         assert_eq!(config.severity_override("RDL3000"), Some(Severity::Error));
@@ -162,6 +211,8 @@ per-file-ignores:
         assert!(config.strict_labels);
         assert!(config.allow_entitlements.contains("security.insecure"));
         assert!(config.per_file_ignores["fixtures/**"].contains("RDL3000"));
+        assert!(config.ignores_for_path("RDL3000", Path::new("fixtures/rules/Dockerfile")));
+        assert!(!config.ignores_for_path("RDL3000", Path::new("src/Dockerfile")));
     }
 
     #[test]
@@ -175,5 +226,22 @@ per-file-ignores:
 
         assert!(message.contains("line 1"));
         assert!(message.contains("column"));
+    }
+
+    #[test]
+    fn load_rejects_invalid_per_file_ignore_globs() {
+        let temp = tempfile::TempDir::new().expect("temp dir should be created");
+        let path = temp.path().join(".rudolint.yaml");
+        std::fs::write(
+            &path,
+            "per-file-ignores:\n  '[unterminated':\n    - RDL3000\n",
+        )
+        .expect("config should be written");
+
+        let error = Config::load(Some(&path)).expect_err("config should fail to load");
+        let message = format!("{error:#}");
+
+        assert!(message.contains("invalid per-file-ignores pattern"));
+        assert!(message.contains("[unterminated"));
     }
 }
