@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-18T19:30:57Z",
+  "generated_at": "2026-05-19T12:06:02Z",
   "commands": {
     "rudolint": "target/release/rudolint",
     "hadolint": "target/dockerfile-linter-bench/tools/hadolint/<version>/hadolint",
@@ -10,7 +10,7 @@
     "rudolint": "rudolint 0.1.0",
     "hadolint": "Haskell Dockerfile Linter 2.14.0",
     "tally": "tally version 0.41.0 (buildkit v0.29.0)",
-    "docker-build-check": "29.4.0"
+    "docker-build-check": "28.0.4"
   },
   "latest_sources": {
     "hadolint": "pinned GitHub release v2.14.0",
