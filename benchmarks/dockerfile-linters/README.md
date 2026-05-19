@@ -70,6 +70,12 @@ Lint findings are treated as successful benchmark executions. Exit codes are
 normalized per tool because Dockerfile linters disagree on whether findings
 should return `0` or `1`.
 
+Each tool/scenario datapoint is timed independently. A benchmark command that
+fails on the publishing runner is retried and then omitted from the charts if it
+still cannot complete; the omission is recorded in `results/latest.json` so the
+workflow can keep publishing the successful datapoints without hiding the
+failure.
+
 ## Reproduce
 
 Prerequisites:
