@@ -5,6 +5,11 @@
 `rudolint` is a fast Dockerfile linter built for modern BuildKit and Buildx
 workflows.
 
+![Dockerfile linter benchmark](benchmarks/dockerfile-linters/results/headline.svg)
+
+_Linting 1,000 deterministic Dockerfiles. Lower is better. See the full
+[Dockerfile linter benchmark methodology](benchmarks/dockerfile-linters/README.md)._
+
 The goal is a single static binary that understands current Dockerfile syntax,
 emits CI-native diagnostics, and stays pleasant to run in pre-commit hooks,
 editors, and large monorepos.
@@ -159,16 +164,22 @@ The intended loop is:
 
 ## Benchmarks
 
-The benchmark harness will compare:
+`rudolint` has two benchmark tracks:
 
-- cold CLI startup
-- linting one Dockerfile
-- linting large repositories
-- JSON and SARIF output time
-- memory use on generated Dockerfile corpora
+- CodSpeed guards internal parser, rule-engine, end-to-end, and output-rendering
+  benchmarks against regressions on pull requests.
+- The external [Dockerfile linter benchmark suite](benchmarks/dockerfile-linters/README.md)
+  compares `rudolint` with `hadolint`, `tally`, and Docker build checks on
+  reproducible CLI workloads.
 
-Benchmarks should be committed only when they are reproducible from local
-fixtures and documented hardware/OS metadata.
+Refresh the external charts with:
+
+```bash
+python3 scripts/dockerfile-linter-bench.py run --runs 5 --warmup 5
+```
+
+After this workflow exists on `main`, refresh the checked-in comparison chart
+with the `Dockerfile linter benchmarks` workflow on a Depot Ubuntu runner.
 
 ## Development
 
