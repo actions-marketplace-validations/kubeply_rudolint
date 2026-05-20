@@ -1,5 +1,7 @@
 //! Render lint findings and fix previews in user-facing output formats.
 
+use std::collections::{BTreeMap, HashSet};
+
 use anyhow::Result;
 use rudolint_diagnostics::Finding;
 use rudolint_fix::FixPreview;
@@ -12,16 +14,27 @@ pub fn human(findings: &[Finding]) -> String {
     }
 
     let mut rendered = String::new();
+    let mut grouped = BTreeMap::new();
     for finding in findings {
-        rendered.push_str(&format!(
-            "{}:{}:{}: {} {} {}\n",
-            finding.path.display(),
-            finding.line(),
-            finding.column(),
-            finding.severity,
-            finding.code,
-            finding.message
-        ));
+        grouped
+            .entry(&finding.path)
+            .or_insert_with(Vec::new)
+            .push(finding);
+    }
+
+    for (path, mut group) in grouped {
+        rendered.push_str(&format!("{}:\n", path.display()));
+        group.sort_by_key(|finding| (finding.line(), finding.column()));
+        for finding in group {
+            rendered.push_str(&format!(
+                "  {}:{} {} {} {}\n",
+                finding.line(),
+                finding.column(),
+                finding.severity,
+                finding.code,
+                finding.message
+            ));
+        }
     }
     rendered
 }
@@ -44,6 +57,23 @@ pub fn json_with_fixes(findings: &[Finding], fixes: &[FixPreview]) -> Result<Str
 
 /// Renders findings as a SARIF 2.1.0 report.
 pub fn sarif(findings: &[Finding]) -> Result<String> {
+    let mut rule_codes = HashSet::with_capacity(findings.len());
+    let rules = findings
+        .iter()
+        .filter_map(|finding| {
+            if !rule_codes.insert(finding.code.as_str()) {
+                return None;
+            }
+            Some(json!({
+                "id": finding.code,
+                "shortDescription": { "text": finding.code },
+                "defaultConfiguration": {
+                    "level": finding.severity.sarif_level()
+                }
+            }))
+        })
+        .collect::<Vec<_>>();
+
     let results = findings
         .iter()
         .map(|finding| {
@@ -76,7 +106,7 @@ pub fn sarif(findings: &[Finding]) -> Result<String> {
                     "driver": {
                         "name": "rudolint",
                         "informationUri": "https://github.com/kubeply/rudolint",
-                        "rules": []
+                        "rules": rules
                     }
                 },
                 "results": results
