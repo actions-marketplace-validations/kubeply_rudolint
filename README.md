@@ -61,6 +61,38 @@ See [docs/release.md](docs/release.md) for release automation details.
 
 ## Install
 
+Released versions publish checksummed binaries for Linux and macOS on
+[GitHub Releases](https://github.com/kubeply/rudolint/releases).
+
+After the first release is published, install the latest release with the
+generated shell installer:
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/kubeply/rudolint/releases/latest/download/rudolint-installer.sh \
+  | sh
+```
+
+Install a pinned version:
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/kubeply/rudolint/releases/download/<tag>/rudolint-installer.sh \
+  | sh
+```
+
+Verify the installed binary:
+
+```bash
+rudolint --version
+```
+
+The command should print `rudolint <version>` and exit with status `0`.
+Failures usually mean the install directory is not on `PATH`, the shell cannot
+execute the installed binary, or the installer failed before completion.
+
+Or install from source while developing:
+
 ```bash
 cargo install --path crates/rudolint-cli
 ```

@@ -44,3 +44,66 @@ Tag pushes that look like semantic versions publish a GitHub Release with:
 
 Pull requests run `dist plan` only. They verify release metadata without
 building or publishing release artifacts.
+
+## Install Paths
+
+The shell installer downloads the archive that matches the host platform and
+installs `rudolint` into `CARGO_HOME` by default.
+
+After the first release is published, install the latest release:
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/kubeply/rudolint/releases/latest/download/rudolint-installer.sh \
+  | sh
+```
+
+Pinned release:
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/kubeply/rudolint/releases/download/<tag>/rudolint-installer.sh \
+  | sh
+```
+
+Verify the installed binary:
+
+```bash
+rudolint --version
+```
+
+The command should print `rudolint <version>` and exit with status `0`.
+
+Direct downloads use this shape:
+
+```text
+https://github.com/kubeply/rudolint/releases/download/<tag>/rudolint-<target>.tar.xz
+https://github.com/kubeply/rudolint/releases/download/<tag>/sha256.sum
+```
+
+Example:
+
+```bash
+curl -LO https://github.com/kubeply/rudolint/releases/download/<tag>/rudolint-x86_64-unknown-linux-gnu.tar.xz
+curl -LO https://github.com/kubeply/rudolint/releases/download/<tag>/sha256.sum
+sha256sum --check --ignore-missing sha256.sum
+tar -xf rudolint-x86_64-unknown-linux-gnu.tar.xz
+```
+
+Successful checksum verification prints a line ending in:
+
+```text
+rudolint-x86_64-unknown-linux-gnu.tar.xz: OK
+```
+
+If verification prints `FAILED`, do not extract or run the archive. A successful
+`tar -xf` extracts the `rudolint` binary in the current directory.
+
+Developers can still install from the checked-out repository:
+
+```bash
+cargo install --path crates/rudolint-cli
+```
+
+No Docker image is published yet. Add one only when there is a concrete CI use
+case that benefits from image distribution over the released binary archives.
