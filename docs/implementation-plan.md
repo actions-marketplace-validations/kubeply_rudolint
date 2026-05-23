@@ -702,13 +702,16 @@ Acceptance criteria:
 Goal: reuse the same parser, settings, diagnostics, and output model for
 editors without changing CLI behavior.
 
-1. Add LSP diagnostic conversion in `rudolint-lsp`.
-2. Add document-open linting.
-3. Add document-change linting.
-4. Add config discovery for editor workspaces.
-5. Add rule explanation hover support.
-6. Add code actions only for safe fixes from `rudolint-fix`.
-7. Add LSP tests for diagnostic ranges.
+1. [x] Add LSP diagnostic conversion in `rudolint-lsp`.
+2. [x] Add document-open linting.
+3. [x] Add document-change linting.
+4. [x] Add config discovery for editor workspaces.
+5. [x] Add rule explanation hover support.
+6. [x] Add code actions only for safe fixes from `rudolint-fix`.
+7. [x] Add LSP tests for diagnostic ranges.
+8. [x] Add a stdio language server binary for terminal and editor clients.
+9. [x] Add end-to-end stdio LSP protocol tests.
+10. [x] Document release packaging for `rudolint-lsp`.
 
 Acceptance criteria:
 
