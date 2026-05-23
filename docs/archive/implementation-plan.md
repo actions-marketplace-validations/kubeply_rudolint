@@ -1,4 +1,8 @@
-# Implementation Plan
+# Archived Implementation Plan
+
+This completed plan tracked the work that led to the first usable `rudolint`
+release and the Marketplace-published GitHub Action. It is kept for historical
+context; new planning should live in a forward-looking roadmap.
 
 This plan orders the work needed to make `rudolint` usable as a fast
 Dockerfile linter for local development, CI, GitHub Actions, and editor
@@ -815,7 +819,7 @@ these criteria instead:
 Goal: make the GitHub Action discoverable without changing the release or
 runtime contract.
 
-1. [ ] Accept the GitHub Marketplace Developer Agreement for the publishing
+1. [x] Accept the GitHub Marketplace Developer Agreement for the publishing
    account or organization.
 2. [x] Confirm `action.yml` has Marketplace-ready metadata:
    - [x] name.
@@ -828,11 +832,11 @@ runtime contract.
    - [x] SARIF upload.
    - [x] compatibility profile.
 4. [x] Document the manual Marketplace publication checklist.
-5. [ ] Publish the released action to GitHub Marketplace from the existing release
+5. [x] Publish the released action to GitHub Marketplace from the existing release
    tag.
-6. [ ] Verify the Marketplace listing points users to the pinned release workflow
+6. [x] Verify the Marketplace listing points users to the pinned release workflow
    pattern.
-7. [ ] Add the Marketplace link to README after publication.
+7. [x] Add the Marketplace link to README after publication.
 
 Acceptance criteria:
 

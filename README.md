@@ -5,12 +5,15 @@
 [![GitHub release](https://img.shields.io/github/v/release/kubeply/rudolint?sort=semver)](https://github.com/kubeply/rudolint/releases)
 [![Rust 1.95.0](https://img.shields.io/badge/rust-1.95.0-orange)](rust-toolchain.toml)
 [![License](https://img.shields.io/github/license/kubeply/rudolint)](LICENSE)
+[![GitHub Marketplace](https://img.shields.io/badge/marketplace-rudolint-blue?logo=github)](https://github.com/marketplace/actions/rudolint)
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/kubeply/rudolint?utm_source=badge)
 
 `rudolint` is a fast Dockerfile linter built for modern BuildKit and Buildx
 workflows.
 
 ## Features
+
+![Dockerfile linter performance](benchmarks/dockerfile-linters/results/headline.svg)
 
 | Feature | What is implemented |
 | --- | --- |
@@ -19,7 +22,7 @@ workflows.
 | Rule profiles | `default` runs Hadolint-style compatibility rules plus BuildKit-native rules. `hadolint-compat` runs Hadolint-style and shell-style rules without BuildKit-native `RDK` diagnostics. |
 | CI output | Human output for terminals, JSON for automation, and SARIF for GitHub code scanning. |
 | Configuration | `.rudolint.yaml` supports ignored rules, severity overrides, per-file ignores, selected rule prefixes, and trusted registries. |
-| GitHub Action | A composite action downloads checksummed release binaries and runs `rudolint` without compiling Rust in user workflows. |
+| GitHub Action | A [Marketplace action](https://github.com/marketplace/actions/rudolint) downloads checksummed release binaries and runs `rudolint` without compiling Rust in user workflows. |
 | Language server | `rudolint-lsp` speaks LSP over stdio for editor diagnostics. |
 | Rule documentation | Implemented rules are documented under [docs/rules](docs/rules/README.md), with compatibility and BuildKit roadmap notes in [docs/rule-roadmap.md](docs/rule-roadmap.md). |
 
@@ -166,7 +169,7 @@ rudolint check . --config .rudolint.yaml
 - [GitHub Action usage](docs/action.md)
 - [Rule roadmap](docs/rule-roadmap.md)
 - [Architecture](docs/architecture.md)
-- [Implementation plan](docs/implementation-plan.md)
+- [Completed implementation plan](docs/archive/implementation-plan.md)
 - [Release automation](docs/release.md)
 
 ## Development

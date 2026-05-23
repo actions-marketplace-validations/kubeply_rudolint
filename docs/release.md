@@ -135,9 +135,10 @@ case that benefits from image distribution over the released binary archives.
 
 ## Marketplace
 
-The GitHub Action is released from this repository, but the Marketplace listing
-is a separate publication step. Track that work in milestone 20 of
-[`docs/implementation-plan.md`](implementation-plan.md).
+The GitHub Action is published on
+[GitHub Marketplace](https://github.com/marketplace/actions/rudolint).
+Marketplace publication is still a manual GitHub release step for future
+release tags because the listing is managed through GitHub's release UI.
 
 ## GitHub Action Versioning
 

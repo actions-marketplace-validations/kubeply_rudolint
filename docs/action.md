@@ -110,27 +110,18 @@ to support compatibility expectations.
 
 ## Marketplace
 
-The action is prepared for GitHub Marketplace publication from a tagged release.
-Publishing remains a manual GitHub release step because the publishing account
-or organization must accept GitHub's Marketplace Developer Agreement.
+The action is published on
+[GitHub Marketplace](https://github.com/marketplace/actions/rudolint).
+Keep Marketplace examples pinned to an explicit release tag:
 
-Before publishing:
+```yaml
+- uses: kubeply/rudolint@<release-tag>
+  with:
+    version: <release-tag>
+```
 
-1. Confirm the release tag contains `action.yml` and matching `rudolint` release
-   binaries.
-2. Open the GitHub release for the tag.
-3. Select `Publish this release to the GitHub Marketplace`.
-4. Keep the Marketplace examples pinned to an explicit release tag:
-
-   ```yaml
-   - uses: kubeply/rudolint@<release-tag>
-     with:
-       version: <release-tag>
-   ```
-
-5. Do not advertise floating tags such as `v0` or `v1` until the project
-   commits to that compatibility policy.
-6. After publication, add the Marketplace listing link to the root README.
+Do not advertise floating tags such as `v0` or `v1` until the project commits
+to that compatibility policy.
 
 ## Inputs
 

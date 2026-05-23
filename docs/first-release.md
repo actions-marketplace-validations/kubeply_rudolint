@@ -78,5 +78,5 @@ rudolint check --format json --failure-threshold error < Dockerfile
   remains the supported entrypoint.
 - The GitHub Action should be pinned to a release tag for blocking CI. Floating
   major tags such as `v0` or `v1` are not published yet.
-- The GitHub Action is not listed on GitHub Marketplace yet. That visibility
-  work is tracked separately in milestone 20.
+- The GitHub Action is listed on GitHub Marketplace. Keep examples pinned to
+  explicit release tags until floating major tags are intentionally published.
