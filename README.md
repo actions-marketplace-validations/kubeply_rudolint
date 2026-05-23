@@ -11,9 +11,9 @@
 `rudolint` is a fast Dockerfile linter built for modern BuildKit and Buildx
 workflows.
 
-## Features
-
 ![Dockerfile linter performance](benchmarks/dockerfile-linters/results/headline.svg)
+
+## Features
 
 | Feature | What is implemented |
 | --- | --- |
