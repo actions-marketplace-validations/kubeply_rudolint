@@ -42,6 +42,14 @@ impl PolicyProfile {
         true
     }
 
+    /// Returns true when legacy external suppression comments should be warned on.
+    pub const fn warns_on_legacy_suppressions(self) -> bool {
+        match self {
+            Self::Default | Self::Strict => true,
+            Self::HadolintCompat => false,
+        }
+    }
+
     /// Returns true for the strict policy profile.
     pub const fn is_strict(self) -> bool {
         matches!(self, Self::Strict)
@@ -170,6 +178,7 @@ mod tests {
         assert!(profile.includes_compatibility_rules());
         assert!(profile.includes_buildkit_native_rules());
         assert!(profile.includes_shell_catalog());
+        assert!(profile.warns_on_legacy_suppressions());
         assert!(!profile.is_strict());
     }
 
@@ -181,6 +190,7 @@ mod tests {
         assert!(profile.includes_compatibility_rules());
         assert!(!profile.includes_buildkit_native_rules());
         assert!(profile.includes_shell_catalog());
+        assert!(!profile.warns_on_legacy_suppressions());
         assert!(!profile.is_strict());
     }
 
@@ -192,6 +202,7 @@ mod tests {
         assert!(profile.includes_compatibility_rules());
         assert!(profile.includes_buildkit_native_rules());
         assert!(profile.includes_shell_catalog());
+        assert!(profile.warns_on_legacy_suppressions());
         assert!(profile.is_strict());
     }
 
