@@ -112,6 +112,52 @@ RUN echo $UNKNOWN_VALUE
 }
 
 #[test]
+fn shell_rules_skip_non_posix_shells_and_reset_between_stages() {
+    let source = r#"FROM mcr.microsoft.com/windows:ltsc2019
+SHELL ["cmd", "/S", "/C"]
+RUN powershell Invoke-WebRequest -OutFile $Env:TEMP\archive.zip
+FROM alpine:3.20
+RUN echo $UNKNOWN_VALUE
+"#;
+    let document = parse_dockerfile(source).expect("fixture should parse");
+    let findings = RuleEngine::new(Profile::HadolintCompat, Config::default()).lint(&document);
+    let sc2086_lines = findings
+        .iter()
+        .filter(|finding| finding.code == "SC2086")
+        .map(Finding::line)
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        sc2086_lines,
+        vec![5],
+        "SC2086 should skip explicit Windows shells and resume for the next default POSIX stage"
+    );
+}
+
+#[test]
+fn shell_rules_skip_unknown_explicit_shells_and_reset_between_stages() {
+    let source = r#"FROM alpine:3.20
+SHELL ["custom-shell", "-c"]
+RUN echo $UNKNOWN_VALUE
+FROM alpine:3.20
+RUN echo $UNKNOWN_VALUE
+"#;
+    let document = parse_dockerfile(source).expect("fixture should parse");
+    let findings = RuleEngine::new(Profile::HadolintCompat, Config::default()).lint(&document);
+    let sc2086_lines = findings
+        .iter()
+        .filter(|finding| finding.code == "SC2086")
+        .map(Finding::line)
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        sc2086_lines,
+        vec![5],
+        "SC2086 should skip unknown explicit shells and resume for the next default POSIX stage"
+    );
+}
+
+#[test]
 fn snapshots_real_world_corpus_findings() {
     let cases = [
         "alpine-packages",
