@@ -259,6 +259,11 @@ Stable releases publish these tags:
 The image uses `rudolint` as its entrypoint and sets `/workspace` as the working
 directory.
 
+Container publishing uses Depot remote container builds through GitHub OIDC. The
+release workflow requires a repository or organization variable named
+`DEPOT_PROJECT_ID`, and the matching Depot project must trust the
+`kubeply/rudolint` GitHub repository.
+
 ## Marketplace
 
 The GitHub Action is published on

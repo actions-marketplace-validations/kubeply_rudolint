@@ -364,9 +364,10 @@ jobs:
       - plan
       - host
     if: ${{ always() && needs.host.result == 'success' && needs.plan.outputs.publishing == 'true' && !contains(needs.plan.outputs.normalized_tag, '-') }}
-    runs-on: depot-ubuntu-24.04
+    runs-on: "ubuntu-24.04"
     permissions:
       "contents": "read"
+      "id-token": "write"
       "packages": "write"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -374,47 +375,73 @@ jobs:
           persist-credentials: false
           submodules: recursive
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
-        with:
-          platforms: arm64
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Check Depot project configuration
+        env:
+          DEPOT_PROJECT_ID: ${{ vars.DEPOT_PROJECT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$DEPOT_PROJECT_ID" ]]; then
+            echo "DEPOT_PROJECT_ID repository or organization variable is required for container publishing." >&2
+            exit 1
+          fi
 
       - name: Log in to GHCR
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "$GHCR_TOKEN" | docker login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Set up Depot
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1
+
+      - name: Prepare image tags
+        id: image-tags
         env:
           IMAGE: ghcr.io/kubeply/rudolint
           RELEASE_TAG: ${{ needs.plan.outputs.normalized_tag }}
-          VCS_REF: ${{ github.sha }}
         shell: bash
         run: |
           set -euo pipefail
 
           tags=(
-            --tag "$IMAGE:$RELEASE_TAG"
-            --tag "$IMAGE:latest"
+            "$IMAGE:$RELEASE_TAG"
+            "$IMAGE:latest"
           )
 
           if [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             major="${RELEASE_TAG%%.*}"
-            tags+=(--tag "$IMAGE:$major")
+            tags+=("$IMAGE:$major")
           fi
 
-          docker buildx build \
-            --file Dockerfile \
-            --platform linux/amd64,linux/arm64 \
-            --build-arg "RUDOLINT_VERSION=$RELEASE_TAG" \
-            --build-arg "VCS_REF=$VCS_REF" \
-            "${tags[@]}" \
-            --push \
-            .
+          {
+            echo "tags<<EOF"
+            printf '%s\n' "${tags[@]}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.image-tags.outputs.tags }}
+          build-args: |
+            RUDOLINT_VERSION=${{ needs.plan.outputs.normalized_tag }}
+            VCS_REF=${{ github.sha }}
+
+      - name: Verify published image tag
+        env:
+          IMAGE: ghcr.io/kubeply/rudolint
+          RELEASE_TAG: ${{ needs.plan.outputs.normalized_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker buildx imagetools inspect "$IMAGE:$RELEASE_TAG" >/dev/null
 
   announce:
     needs:
