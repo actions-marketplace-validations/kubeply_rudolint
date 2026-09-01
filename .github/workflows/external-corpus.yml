@@ -24,18 +24,18 @@ env:
 jobs:
   hadoop:
     name: apache hadoop
-    runs-on: ubuntu-24.04
+    runs-on: depot-ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master as of 2026-05-16
         with:
-          toolchain: 1.95.0
+          toolchain: 1.97.1
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32

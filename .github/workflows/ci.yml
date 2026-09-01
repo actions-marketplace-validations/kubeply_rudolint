@@ -35,7 +35,7 @@ jobs:
       run_rust: ${{ steps.scope.outputs.run_rust }}
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -82,10 +82,10 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.run_rust == 'true' }}
     runs-on: depot-ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
 
@@ -95,7 +95,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.95.0
+          toolchain: 1.97.1
           components: clippy,rustfmt
 
       - name: Cache Rust build
@@ -109,6 +109,23 @@ jobs:
 
       - name: Lint
         run: cargo clippy --all-targets --all-features --locked -- -D warnings
+
+      - name: Test Hawk installer
+        run: |
+          bash -n scripts/install-hawk.sh scripts/install-hawk-path.sh scripts/test-install-hawk.sh
+          shellcheck -x scripts/install-hawk.sh scripts/test-install-hawk.sh
+          ./scripts/test-install-hawk.sh
+
+      - name: Install Hawk
+        run: ./scripts/install-hawk.sh
+
+      - name: Check workspace visibility
+        run: >-
+          cargo hawk check
+          --manifest-path Cargo.toml
+          --target-dir target/hawk
+          -D warnings
+          -D hawk::unnecessary_crate_visibility
 
       - name: Test
         run: cargo test --all-targets --all-features --locked
@@ -124,14 +141,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.95.0
+          toolchain: 1.97.1
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
@@ -148,14 +165,14 @@ jobs:
       RUDOLINT_ORACLE_BIN: hadolint
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           persist-credentials: false
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master as of 2026-05-16
         with:
-          toolchain: 1.95.0
+          toolchain: 1.97.1
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
